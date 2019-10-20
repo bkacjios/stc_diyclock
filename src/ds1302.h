@@ -101,6 +101,7 @@ __bit __at (0x60) CONF_C_F;
 __bit __at (0x61) CONF_ALARM_ON;
 __bit __at (0x62) CONF_CHIME_ON;
 __bit __at (0x6E) CONF_SW_MMDD;
+__bit __at (0x6F) CONF_DST_ON;
 
 // DS1302 Functions
 
@@ -124,13 +125,14 @@ void ds_init();
 
 // toggle 12/24 hour mode
 void ds_hours_12_24_toggle();
-    
+
 // increment hours
 void ds_hours_incr();
 
 // increment minutes
 void ds_minutes_incr();
 
+#ifndef WITHOUT_DATE
 // increment year
 void ds_year_incr();
 
@@ -139,16 +141,17 @@ void ds_month_incr();
 
 // increment day
 void ds_day_incr();
+#endif
 
 void ds_weekday_incr();
 void ds_sec_zero();
-    
+
 // split bcd to int
 uint8_t ds_split2int(uint8_t tens_ones);
 
 // return bcd byte from integer
 uint8_t ds_int2bcd(uint8_t integer);
-    
+
 // convert integer to bcd parts (high = tens, low = ones)
 uint8_t ds_int2bcd_tens(uint8_t integer);
 uint8_t ds_int2bcd_ones(uint8_t integer);
@@ -157,5 +160,9 @@ void ds_alarm_minutes_incr();
 void ds_alarm_hours_incr();
 void ds_alarm_on_toggle();
 void ds_date_mmdd_toggle();
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+void ds_date_dst_toggle();
+void ds_date_dst_update();
+#endif
 void ds_temperature_offset_incr();
 void ds_temperature_cf_toggle();

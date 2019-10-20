@@ -89,4 +89,9 @@
  #define _DS_SCLK _P1_2
 #endif
 
+#ifdef WITHOUT_DATE
+	// We rely on dates for daylight savings
+	#define WITHOUT_DAYLIGHTSAVINGS
+#endif
+
 #endif

@@ -13,6 +13,7 @@
 #define MAGIC_LO  0xA5
 
 #define INCR(num, low, high) if (num < high) { num++; } else { num = low; }
+#define DECR(num, low, high) if (num > low) { num--; } else { num = high; }
 
 /*
   Judge whether need to initialize RAM or not by checking RAM address 0x10-0x11 has A5,5A (MAGIC).
@@ -225,6 +226,29 @@ void ds_hours_incr() {
     ds_writebyte(DS_ADDR_HOUR, b);
 }
 
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+// decrement hours
+void ds_hours_decr() {
+    uint8_t hours, b = 0;
+    if (!H12_12) {
+        hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24); //24h format
+        DECR(hours, 0, 23);
+        b = ds_int2bcd(hours);      // bit 7 = 0
+    } else {
+        hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR12); //12h format
+        DECR(hours, 1, 12);
+        if (hours == 12) {
+            H12_PM = !H12_PM;
+        }
+        b = ds_int2bcd(hours) | DS_MASK_1224_MODE;
+        if (H12_PM) {
+            b |=  DS_MASK_PM;
+        }
+    }
+    ds_writebyte(DS_ADDR_HOUR, b);
+}
+#endif
+
 // increment minutes
 void ds_minutes_incr() {
     uint8_t minutes = ds_split2int(rtc_table[DS_ADDR_MINUTES] & DS_MASK_MINUTES);
@@ -232,6 +256,7 @@ void ds_minutes_incr() {
     ds_writebyte(DS_ADDR_MINUTES, ds_int2bcd(minutes));
 }
 
+#ifndef WITHOUT_DATE
 // increment year
 void ds_year_incr() {
     uint8_t year = ds_split2int(rtc_table[DS_ADDR_YEAR] & DS_MASK_YEAR);
@@ -252,6 +277,7 @@ void ds_day_incr() {
     INCR(day, 1, 31);
     ds_writebyte(DS_ADDR_DAY, ds_int2bcd(day));
 }
+#endif
 
 void ds_alarm_minutes_incr() {
     uint8_t mm = cfg_table[CFG_ALARM_MINUTES_BYTE] & CFG_ALARM_MINUTES_MASK;
@@ -279,6 +305,89 @@ void ds_date_mmdd_toggle() {
     CONF_SW_MMDD = !CONF_SW_MMDD;
     ds_ram_config_write();
 }
+
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+__bit isDaylightSavings()
+{
+    int8_t previousSunday;
+    uint8_t month = ds_split2int(rtc_table[DS_ADDR_MONTH] & DS_MASK_MONTH);
+    int8_t day = ds_split2int(rtc_table[DS_ADDR_DAY] & DS_MASK_DAY);
+    uint8_t dow = rtc_table[DS_ADDR_WEEKDAY] - 1;
+    uint8_t hour = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24);  //24h format
+
+    if (month > 3 && month < 11) return 1; //4,5,6,7,8,9,10
+
+    if (month < 3 || month == 12) return 0; //1, 2 or 12
+
+    if (month == 3)
+    {
+        //The 2nd Sunday in March is 8,9,10,11,12,13,14
+        if (day < 8 ) return 0;
+        if (day > 14) return 1;
+
+        //To get here day >= 8 && day <= 14
+        previousSunday = day - dow;
+
+        if (previousSunday < 8) previousSunday += 7;
+
+        if (day > previousSunday ) return 1;
+        if (day < previousSunday ) return 0;
+
+        // If the hour rolled back to 1, we're now in DST mode
+        if (hour == 1 && CONF_DST_ON == 1) return 1;
+
+        //To get here day = previousSunday
+        if (hour >= 2) return 1;
+        else return 0;
+    }
+
+    if (month == 11)
+    {
+        //The 1st Sunday in Nov is 1,2,3,4,5,6,7
+        if (day > 7) return 0;
+
+        //To get here day >= 1 && day <= 7
+        previousSunday = day - dow;
+
+        if (previousSunday < 1) previousSunday += 7;
+
+        if (day > previousSunday) return 0;
+        if (day < previousSunday) return 1;
+
+        // If the hour rolled back to 1, we're no longer in DST mode
+        if (hour == 1 && CONF_DST_ON == 0) return 0;
+
+        //To get here day = previousSunday
+        if (hour >= 2) return 0;
+        else return 1;
+    }
+
+    // We should never get here..
+    return 0;
+}
+
+void ds_date_dst_toggle() {
+    CONF_DST_ON = !CONF_DST_ON;
+    ds_ram_config_write();
+}
+
+void ds_date_dst_update() {
+    __bit DST = isDaylightSavings();
+
+    // Update the hour when a DST change occurs
+    if (DST != CONF_DST_ON) {
+        CONF_DST_ON = DST;
+        ds_ram_config_write();
+
+        if (DST)
+            // Sprint forward
+            ds_hours_incr();
+        else
+            // Fall back
+            ds_hours_decr();
+    }
+}
+#endif
 
 void ds_temperature_offset_incr() {
     uint8_t offset = cfg_table[CFG_TEMP_BYTE] & CFG_TEMP_MASK;

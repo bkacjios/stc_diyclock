@@ -443,6 +443,10 @@ int main()
             rtc_mm_bcd = rtc_table[DS_ADDR_MINUTES] & DS_MASK_MINUTES;
         }
 
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+        ds_date_dst_update();
+#endif
+
 #ifndef WITHOUT_ALARM
         if (cfg_changed) {
             alarm_pm = 0;
@@ -563,6 +567,11 @@ int main()
                 else if (ev == EV_S2_SHORT) {
                     kmode = K_YEAR_DISP;
                 }
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+                else if (ev == EV_S2_LONG) {
+                    ds_date_dst_toggle();
+                }
+#endif
                 break;
 
             case K_SET_MONTH:
@@ -574,6 +583,11 @@ int main()
                     flash_01 = 0;
                     kmode = CONF_SW_MMDD ? K_DATE_DISP : K_SET_DAY;
                 }
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+                else if (ev == EV_S2_LONG) {
+                    ds_date_dst_toggle();
+                }
+#endif
                 break;
 
             case K_SET_DAY:
@@ -585,6 +599,11 @@ int main()
                     flash_23 = 0;
                     kmode = CONF_SW_MMDD ? K_SET_MONTH : K_DATE_DISP;
                 }
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+                else if (ev == EV_S2_LONG) {
+                    ds_date_dst_toggle();
+                }
+#endif
                 break;
 #endif
 
@@ -602,6 +621,11 @@ int main()
                     kmode = K_NORMAL;
 #endif
                 }
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+                else if (ev == EV_S2_LONG) {
+                    ds_date_dst_toggle();
+                }
+#endif
                 break;
 
 #ifndef WITHOUT_DATE
@@ -613,6 +637,11 @@ int main()
                 else if (ev == EV_S2_SHORT) {
                     kmode = K_NORMAL;
                 }
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+                else if (ev == EV_S2_LONG) {
+                    ds_date_dst_toggle();
+                }
+#endif
 	        break;
 #endif
 
@@ -826,7 +855,11 @@ int main()
                     }
                 }
                 dotdisplay(1, 1);
+    #ifndef WITHOUT_DAYLIGHTSAVINGS
+                dot3display(CONF_DST_ON);
+    #else
                 dot3display(0);
+    #endif
                 break;
 #endif
 
@@ -841,6 +874,11 @@ int main()
 	      filldisplay(3, weekDay[wd][2]-'A'+LED_a, 0);
 	      
 	      dot3display(0);
+#ifndef WITHOUT_DAYLIGHTSAVINGS
+          dot3display(CONF_DST_ON);
+#else
+          dot3display(0);
+#endif
 	      }
 	      break;
 
@@ -852,6 +890,11 @@ int main()
 	      
 	      filldisplay(2,(rtc_table[DS_ADDR_YEAR] >> 4) & (DS_MASK_YEAR_TENS >> 4), 0);
 	      filldisplay(3, rtc_table[DS_ADDR_YEAR] & DS_MASK_YEAR_UNITS, 0);
+    #ifndef WITHOUT_DAYLIGHTSAVINGS
+          dot3display(CONF_DST_ON);
+    #else
+          dot3display(0);
+    #endif
 	      break;
 	      
             case M_TEMP_DISP:
