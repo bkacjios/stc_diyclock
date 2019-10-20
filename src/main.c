@@ -55,11 +55,11 @@ enum display_mode {
     M_SET_HOUR_12_24,
     M_SEC_DISP,
     M_TEMP_DISP,
+    M_WEEKDAY_DISP,
 #ifndef WITHOUT_DATE
     M_DATE_DISP,
-#endif
-    M_WEEKDAY_DISP,
     M_YEAR_DISP,
+#endif
 #ifndef WITHOUT_ALARM
     M_ALARM,
 #endif
@@ -547,11 +547,7 @@ int main()
                     ds_temperature_cf_toggle();
                 }
                 else if (ev == EV_S2_SHORT) {
-#ifndef WITHOUT_DATE
-                    kmode = K_DATE_DISP;
-#else
                     kmode = K_WEEKDAY_DISP;
-#endif
                 }
                 break;
 
@@ -565,7 +561,7 @@ int main()
                     kmode = CONF_SW_MMDD ? K_SET_DAY : K_SET_MONTH;
                 }
                 else if (ev == EV_S2_SHORT) {
-                    kmode = K_WEEKDAY_DISP;
+                    kmode = K_YEAR_DISP;
                 }
                 break;
 
@@ -598,12 +594,17 @@ int main()
                     ds_weekday_incr();
                 }
                 else if (ev == EV_S2_SHORT) {
-//                    kmode = K_NORMAL;
-		    // next mode is year_disp
-                    kmode = K_YEAR_DISP;
+#ifndef WITHOUT_DATE
+                    // next mode is year_disp
+                    kmode = K_DATE_DISP;
+#else
+                    // Back to start
+                    kmode = K_NORMAL;
+#endif
                 }
                 break;
 
+#ifndef WITHOUT_DATE
 	    case K_YEAR_DISP:
                 dmode = M_YEAR_DISP;
                 if (ev == EV_S1_SHORT || (S1_LONG && blinker_fast)) {
@@ -613,6 +614,7 @@ int main()
                     kmode = K_NORMAL;
                 }
 	        break;
+#endif
 
 #ifdef DEBUG
             // To enter DEBUG mode, go to the SECONDS display, then hold S1 and S2 simultaneously.
@@ -734,9 +736,10 @@ int main()
 	  ss = rtc_table[DS_ADDR_SECONDS];
 	  if (ss < 0x20) dmode = M_NORMAL;
 	  else if (ss < 0x25) dmode = M_TEMP_DISP;
-	  else if (ss < 0x30) dmode = M_DATE_DISP;
-	  else if (ss < 0x35) dmode = M_WEEKDAY_DISP;
-	  
+      else if (ss < 0x30) dmode = M_WEEKDAY_DISP;
+    #ifndef WITHOUT_DATE
+	  else if (ss < 0x35) dmode = M_DATE_DISP;
+    #endif
 	}
 #endif
 
@@ -841,6 +844,7 @@ int main()
 	      }
 	      break;
 
+#ifndef WITHOUT_DATE
             case M_YEAR_DISP:
 	      //fix upper 2 digit as 20
 	      filldisplay(0, 2, 0);
@@ -857,6 +861,7 @@ int main()
                 // if (temp<0) filldisplay( 3, LED_DASH, 0);  -- temp defined as uint16, cannot be <0
                 dot3display(0);
                 break;
+#endif
 
 #ifdef DEBUG
             case M_DEBUG:
