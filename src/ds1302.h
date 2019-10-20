@@ -161,7 +161,6 @@ void ds_alarm_hours_incr();
 void ds_alarm_on_toggle();
 void ds_date_mmdd_toggle();
 #ifndef WITHOUT_DAYLIGHTSAVINGS
-void ds_date_dst_toggle();
 void ds_date_dst_update();
 #endif
 void ds_temperature_offset_incr();

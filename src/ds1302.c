@@ -366,11 +366,6 @@ __bit isDaylightSavings()
 	return 0;
 }
 
-void ds_date_dst_toggle() {
-	CONF_DST_ON = !CONF_DST_ON;
-	ds_ram_config_write();
-}
-
 void ds_date_dst_update() {
 	__bit DST = isDaylightSavings();
 

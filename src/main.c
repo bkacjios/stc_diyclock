@@ -567,11 +567,6 @@ int main()
 				else if (ev == EV_S2_SHORT) {
 					kmode = K_YEAR_DISP;
 				}
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-				else if (ev == EV_S2_LONG) {
-					ds_date_dst_toggle();
-				}
-#endif
 				break;
 
 			case K_SET_MONTH:
@@ -583,11 +578,6 @@ int main()
 					flash_01 = 0;
 					kmode = CONF_SW_MMDD ? K_DATE_DISP : K_SET_DAY;
 				}
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-				else if (ev == EV_S2_LONG) {
-					ds_date_dst_toggle();
-				}
-#endif
 				break;
 
 			case K_SET_DAY:
@@ -599,11 +589,6 @@ int main()
 					flash_23 = 0;
 					kmode = CONF_SW_MMDD ? K_SET_MONTH : K_DATE_DISP;
 				}
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-				else if (ev == EV_S2_LONG) {
-					ds_date_dst_toggle();
-				}
-#endif
 				break;
 #endif
 
@@ -622,11 +607,6 @@ int main()
 					kmode = K_NORMAL;
 #endif
 				}
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-				else if (ev == EV_S2_LONG) {
-					ds_date_dst_toggle();
-				}
-#endif
 				break;
 
 
@@ -639,11 +619,6 @@ int main()
 					else if (ev == EV_S2_SHORT) {
 						kmode = K_NORMAL;
 					}
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-				else if (ev == EV_S2_LONG) {
-					ds_date_dst_toggle();
-				}
-#endif
 				break;
 #endif
 
