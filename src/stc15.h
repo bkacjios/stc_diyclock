@@ -8,20 +8,20 @@
 #endif
 
 /*  P4  */
-__sfr __at (0xC0) P4   ;
-__sbit __at (0xC0) P4_0 ;
-__sbit __at (0xC1) P4_1 ;
-__sbit __at (0xC2) P4_2 ;
-__sbit __at (0xC3) P4_3 ;
-__sbit __at (0xC4) P4_4 ;
-__sbit __at (0xC5) P4_5 ;
-__sbit __at (0xC6) P4_6 ;
-__sbit __at (0xC7) P4_7 ;
+__sfr  __at (0xC0) P4;
+__sbit __at (0xC0) P4_0;
+__sbit __at (0xC1) P4_1;
+__sbit __at (0xC2) P4_2;
+__sbit __at (0xC3) P4_3;
+__sbit __at (0xC4) P4_4;
+__sbit __at (0xC5) P4_5;
+__sbit __at (0xC6) P4_6;
+__sbit __at (0xC7) P4_7;
 
 __sfr __at 0x94 P0M0;
 __sfr __at 0x93 P0M1;
-__sfr __at 0x92 P1M0; 
-__sfr __at 0x91 P1M1; 
+__sfr __at 0x92 P1M0;
+__sfr __at 0x91 P1M1;
 __sfr __at 0x96 P2M0;
 __sfr __at 0x95 P2M1;
 __sfr __at 0xB2 P3M0;
@@ -78,7 +78,7 @@ __sfr __at 0xA9 SADDR;
 __sfr __at 0xB9 SADEN;
 
 //ADC
-__sfr __at 0xBC ADC_CONTR; 
+__sfr __at 0xBC ADC_CONTR;
 __sfr __at 0xBD ADC_RES;
 __sfr __at 0xBE ADC_RESL;
 
@@ -88,42 +88,42 @@ __sfr __at 0xCE SPCTL;
 __sfr __at 0xCF SPDAT;
 
 //IAP/ISP
-__sfr __at 0xC2 IAP_DATA; 
+__sfr __at 0xC2 IAP_DATA;
 __sfr __at 0xC3 IAP_ADDRH;
 __sfr __at 0xC4 IAP_ADDRL;
 __sfr __at 0xC5 IAP_CMD;
 __sfr __at 0xC6 IAP_TRIG;
-__sfr __at 0xC7 IAP_CONTR; 
+__sfr __at 0xC7 IAP_CONTR;
 
 //PCA/PWM 
-__sfr __at 0xD8 CCON; 
+__sfr __at 0xD8 CCON;
 __sbit __at 0xDF CF;
 __sbit __at 0xDE CR;
 __sbit __at 0xDA CCF2;
 __sbit __at 0xD9 CCF1;
 __sbit __at 0xD8 CCF0;
 
-__sfr __at 0xD9 CMOD; 
-__sfr __at 0xE9 CL; 
-__sfr __at 0xF9 CH; 
-__sfr __at 0xDA CCAPM0; 
+__sfr __at 0xD9 CMOD;
+__sfr __at 0xE9 CL;
+__sfr __at 0xF9 CH;
+__sfr __at 0xDA CCAPM0;
 __sfr __at 0xDB CCAPM1;
-__sfr __at 0xDC CCAPM2; 
-__sfr __at 0xEA CCAP0L; 
-__sfr __at 0xEB CCAP1L; 
-__sfr __at 0xEC CCAP2L; 
-__sfr __at 0xF2 PCA_PWM0; 
-__sfr __at 0xF3 PCA_PWM1; 
-__sfr __at 0xF4 PCA_PWM2; 
-__sfr __at 0xFA CCAP0H; 
+__sfr __at 0xDC CCAPM2;
+__sfr __at 0xEA CCAP0L;
+__sfr __at 0xEB CCAP1L;
+__sfr __at 0xEC CCAP2L;
+__sfr __at 0xF2 PCA_PWM0;
+__sfr __at 0xF3 PCA_PWM1;
+__sfr __at 0xF4 PCA_PWM2;
+__sfr __at 0xFA CCAP0H;
 __sfr __at 0xFB CCAP1H;
-__sfr __at 0xFC CCAP2H; 
+__sfr __at 0xFC CCAP2H;
 
 __sfr __at 0xE6 CMPCR1;
 __sfr __at 0xE7 CMPCR2;
 
 //PWM
-__sfr __at 0xf1 PWMCFG; 
+__sfr __at 0xf1 PWMCFG;
 __sfr __at 0xf5 PWMCR;
 __sfr __at 0xf6 PWMIF;
 __sfr __at 0xf7 PWMFDCR;
