@@ -27,7 +27,9 @@ enum keyboard_mode {
 	K_NORMAL,
 	K_SET_HOUR,
 	K_SET_MINUTE,
+#ifndef WITHOUT_MILITARY
 	K_SET_HOUR_12_24,
+#endif
 	K_SEC_DISP,
 	K_TEMP_DISP,
 #ifndef WITHOUT_DATE
@@ -35,8 +37,8 @@ enum keyboard_mode {
 	K_SET_MONTH,
 	K_SET_DAY,
 	K_YEAR_DISP,
-#endif
 	K_WEEKDAY_DISP,
+#endif
 #ifndef WITHOUT_ALARM
 	K_ALARM,
 	K_ALARM_SET_HOUR,
@@ -374,7 +376,7 @@ void dot3display(__bit pm)
 	dotdisplay(3, pm);
 }
 
-
+#ifndef WITHOUT_ALARM
 //set next alarm_min by adding snooze
 uint8_t add_BCD(uint8_t snooze) {
   snooze;	//dpl
@@ -386,6 +388,7 @@ uint8_t add_BCD(uint8_t snooze) {
 	ret
   __endasm;
 }
+#endif
 
 /*********************************************/
 int main()
@@ -513,7 +516,7 @@ int main()
 			case K_SET_HOUR:
 				flash_01 = 1;
 				if (ev == EV_S1_SHORT || (S1_LONG && blinker_fast)) {
-					ds_hours_incr();
+					ds_hours_incr(0);
 				}
 				else if (ev == EV_S2_SHORT) {
 					kmode = K_SET_MINUTE;
@@ -527,10 +530,15 @@ int main()
 					ds_minutes_incr();
 				}
 				else if (ev == EV_S2_SHORT) {
+#ifndef WITHOUT_MILITARY
 					kmode = K_SET_HOUR_12_24;
+#else
+					kmode = K_NORMAL;
+#endif
 				}
 				break;
 
+#ifndef WITHOUT_MILITARY
 			case K_SET_HOUR_12_24:
 				dmode = M_SET_HOUR_12_24;
 				if (ev == EV_S1_SHORT) {
@@ -541,6 +549,7 @@ int main()
 					kmode = K_NORMAL;
 				}
 				break;
+#endif
 
 			case K_TEMP_DISP:
 				dmode = M_TEMP_DISP;
@@ -551,7 +560,11 @@ int main()
 					ds_temperature_cf_toggle();
 				}
 				else if (ev == EV_S2_SHORT) {
+#ifndef WITHOUT_DATE
 					kmode = K_WEEKDAY_DISP;
+#else
+					kmode = K_NORMAL;
+#endif
 				}
 				break;
 
@@ -590,7 +603,6 @@ int main()
 					kmode = CONF_SW_MMDD ? K_SET_MONTH : K_DATE_DISP;
 				}
 				break;
-#endif
 
 			case K_WEEKDAY_DISP:
 				dmode = M_WEEKDAY_DISP;
@@ -598,19 +610,11 @@ int main()
 					ds_weekday_incr();
 				}
 				else if (ev == EV_S2_SHORT) {
-
-#ifndef WITHOUT_DATE
 					// next mode is year_disp
 					kmode = K_DATE_DISP;
-#else
-					// Back to start
-					kmode = K_NORMAL;
-#endif
 				}
 				break;
 
-
-#ifndef WITHOUT_DATE
 			case K_YEAR_DISP:
 					dmode = M_YEAR_DISP;
 					if (ev == EV_S1_SHORT || (S1_LONG && blinker_fast)) {
@@ -780,7 +784,7 @@ int main()
 					filldisplay(3, mm & 0x0F, 0);
 				}
 
-				if (blinker_slow || dmode != M_NORMAL) {
+				if (dmode == M_NORMAL) {
 					dotdisplay(1, 1);
 					dotdisplay(2, 1);
 				}

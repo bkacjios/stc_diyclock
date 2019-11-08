@@ -91,8 +91,10 @@
 #endif
 
 #ifdef WITHOUT_DATE
+#ifndef WITHOUT_DAYLIGHTSAVINGS
 	// We rely on dates for daylight savings
 	#define WITHOUT_DAYLIGHTSAVINGS
+#endif
 #endif
 
 #endif

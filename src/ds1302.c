@@ -4,7 +4,7 @@
 
 #pragma callee_saves sendbyte,readbyte
 #pragma callee_saves ds_writebyte,ds_readbyte
-// silence: "src/ds1302.c:84: warning 59: function 'readbyte' must return value"
+// silence: "src/ds1302.c:85: warning 59: function 'readbyte' must return value"
 #pragma disable_warning 59
 
 #include "ds1302.h"
@@ -22,10 +22,27 @@
 void ds_ram_config_init() {
 	uint8_t i,j;
 	// check magic bytes to see if ram has been written before
-	if ( (ds_readbyte( DS_CMD_RAM >> 1 | 0x00) != MAGIC_LO || ds_readbyte( DS_CMD_RAM >> 1 | 0x01) != MAGIC_HI) ) {
+	if ((ds_readbyte(DS_CMD_RAM >> 1 | 0x00) != MAGIC_LO || ds_readbyte(DS_CMD_RAM >> 1 | 0x01) != MAGIC_HI)) {
 		// if not, must init ram config to defaults
-		ds_writebyte( DS_CMD_RAM >> 1 | 0x00, MAGIC_LO);
-		ds_writebyte( DS_CMD_RAM >> 1 | 0x01, MAGIC_HI);
+		ds_writebyte(DS_CMD_RAM >> 1 | 0x00, MAGIC_LO);
+		ds_writebyte(DS_CMD_RAM >> 1 | 0x01, MAGIC_HI);
+
+		// Reset the clock to January 1st, 2000, 12:00:00
+		ds_writebyte(DS_ADDR_SECONDS, 0x00);
+		ds_writebyte(DS_ADDR_MINUTES, 0x00);
+
+#ifdef WITHOUT_MILITARY
+		// Default to AM/PM mode
+		ds_writebyte(DS_ADDR_HOUR,    DS_MASK_12H_MODE|0x12);
+#else
+		// Default to 24 hour mode
+		ds_writebyte(DS_ADDR_HOUR,    0x12);
+#endif
+
+		ds_writebyte(DS_ADDR_MONTH,   0x01);
+		ds_writebyte(DS_ADDR_DAY,     0x01);
+		ds_writebyte(DS_MASK_WEEKDAY, 0x01);
+		ds_writebyte(DS_ADDR_YEAR,    0x00);
 
 		ds_ram_config_write();	// OPTIMISE : Will generate a ljmp to ds_ram_config_write
 		return;
@@ -159,7 +176,7 @@ void ds_writebyte(uint8_t addr, uint8_t data) {
 void ds_init() {
 	uint8_t b = ds_readbyte(DS_ADDR_SECONDS);
 	ds_writebyte(DS_ADDR_WP, 0); // clear WP
-	b &= ~(0b10000000);	// clear Bit7
+	b &= ~(DS_MASK_HALT);	// clear Bit7
 	ds_writebyte(DS_ADDR_SECONDS, b); // clear CH
 }
 
@@ -167,14 +184,13 @@ void ds_init() {
 // reset date, time
 void ds_reset_clock() {
 	ds_writebyte(DS_ADDR_MINUTES, 0x00);
-	ds_writebyte(DS_ADDR_HOUR,  DS_MASK_1224_MODE|0x07);
+	ds_writebyte(DS_ADDR_HOUR,  DS_MASK_12H_MODE|0x07);
 	ds_writebyte(DS_ADDR_MONTH, 0x01);
 	ds_writebyte(DS_ADDR_DAY,   0x01);
 }
 */
 
 void ds_hours_12_24_toggle() {
-
 	uint8_t hours,b;
 	if (H12_12) { // 12h->24h
 		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR12); // hours in 12h format (1-11am 12pm 1-11pm 12am)
@@ -191,7 +207,7 @@ void ds_hours_12_24_toggle() {
 	}
 	else { // 24h->12h
 		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24); // hours in 24h format (0-23, 0-11=>am , 12-23=>pm)
-		b = DS_MASK_1224_MODE;
+		b = DS_MASK_12H_MODE;
 		if (hours >= 12) { 	// pm
 			hours -= 12;
 			b |= DS_MASK_PM;
@@ -206,48 +222,35 @@ void ds_hours_12_24_toggle() {
 }
 
 // increment hours
-void ds_hours_incr() {
+void ds_hours_incr(__bit decrement) {
 	uint8_t hours, b = 0;
 	if (!H12_12) {
 		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24);	//24h format
-		INCR(hours, 0, 23);
+		if (decrement) {
+			DECR(hours, 0, 23);
+		}
+		else {
+			INCR(hours, 0, 23);
+		}
 		b = ds_int2bcd(hours);		// bit 7 = 0
 	} else {
 		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR12);	//12h format
-		INCR(hours, 1, 12);
+		if (decrement) {
+			DECR(hours, 1, 12);
+		}
+		else {
+			INCR(hours, 1, 12);
+		}
 		if (hours == 12) {
 			H12_PM = !H12_PM;
 		}
-		b = ds_int2bcd(hours) | DS_MASK_1224_MODE;
+		b = ds_int2bcd(hours) | DS_MASK_12H_MODE;
 		if (H12_PM) {
 			b |=  DS_MASK_PM;
 		}
 	}
 	ds_writebyte(DS_ADDR_HOUR, b);
 }
-
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-// decrement hours
-void ds_hours_decr() {
-	uint8_t hours, b = 0;
-	if (!H12_12) {
-		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24);	//24h format
-		DECR(hours, 0, 23);
-		b = ds_int2bcd(hours);		// bit 7 = 0
-	} else {
-		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR12);	//12h format
-		DECR(hours, 1, 12);
-		if (hours == 12) {
-			H12_PM = !H12_PM;
-		}
-		b = ds_int2bcd(hours) | DS_MASK_1224_MODE;
-		if (H12_PM) {
-			b |=  DS_MASK_PM;
-		}
-	}
-	ds_writebyte(DS_ADDR_HOUR, b);
-}
-#endif
 
 // increment minutes
 void ds_minutes_incr() {
@@ -374,12 +377,8 @@ void ds_date_dst_update() {
 		CONF_DST_ON = DST;
 		ds_ram_config_write();
 
-		if (DST)
-			// Sprint forward
-			ds_hours_incr();
-		else
-			// Fall back
-			ds_hours_decr();
+		// Spring forward if DST = 1, fall back if DST = 0
+		ds_hours_incr(DST);
 	}
 }
 #endif

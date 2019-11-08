@@ -34,13 +34,14 @@
 // DS_ADDR_WEEKDAY      0000_0111	0_1-0_7
 // DS_ADDR_YEAR		1111_1111	0_0-9_9 
 
+#define DS_MASK_HALT          0b10000000
 #define DS_MASK_SECONDS       0b01111111
 #define DS_MASK_SECONDS_TENS  0b01110000
 #define DS_MASK_SECONDS_UNITS 0b00001111
 #define DS_MASK_MINUTES       0b01111111
 #define DS_MASK_MINUTES_TENS  0b01110000
 #define DS_MASK_MINUTES_UNITS 0b00001111
-#define DS_MASK_1224_MODE     0b10000000
+#define DS_MASK_12H_MODE      0b10000000
 #define DS_MASK_PM            0b00100000
 #define DS_MASK_HOUR12        0b00011111
 #define DS_MASK_HOUR12_TENS   0b00010000
@@ -92,7 +93,7 @@ uint8_t __at (0x2c) cfg_table[4];
 #define CFG_TEMP_MASK          0b00000111
 
 // Offset 0 => alarm_hour (7..3) / chime_on (2) / alarm_on (1) / temp_C_F (0)
-// Offset 1 => (7) not used / (6) sw_mmdd / alarm_minute (5..0)
+// Offset 1 => (7) dst_active / (6) sw_mmdd / alarm_minute (5..0)
 // Offset 2 => chime_hour_start (7..3) / temp_offset (2..0), signed -4 / +3
 // Offset 3 => (7),(6)&(5) not used / chime_hour_stop (4..0)
 
@@ -127,7 +128,7 @@ void ds_init();
 void ds_hours_12_24_toggle();
 
 // increment hours
-void ds_hours_incr();
+void ds_hours_incr(__bit decrement);
 
 // increment minutes
 void ds_minutes_incr();
