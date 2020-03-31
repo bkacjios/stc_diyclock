@@ -13,7 +13,6 @@
 #define MAGIC_LO  0xA5
 
 #define INCR(num, low, high) if (num < high) { num++; } else { num = low; }
-#define DECR(num, low, high) if (num > low) { num--; } else { num = high; }
 
 /*
   Judge whether need to initialize RAM or not by checking RAM address 0x10-0x11 has A5,5A (MAGIC).
@@ -222,25 +221,15 @@ void ds_hours_12_24_toggle() {
 }
 
 // increment hours
-void ds_hours_incr(__bit decrement) {
+void ds_hours_incr() {
 	uint8_t hours, b = 0;
 	if (!H12_12) {
 		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24);	//24h format
-		if (decrement) {
-			DECR(hours, 0, 23);
-		}
-		else {
-			INCR(hours, 0, 23);
-		}
+		INCR(hours, 0, 23);
 		b = ds_int2bcd(hours);		// bit 7 = 0
 	} else {
 		hours = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR12);	//12h format
-		if (decrement) {
-			DECR(hours, 1, 12);
-		}
-		else {
-			INCR(hours, 1, 12);
-		}
+		INCR(hours, 1, 12);
 		if (hours == 12) {
 			H12_PM = !H12_PM;
 		}
@@ -304,84 +293,32 @@ void ds_alarm_on_toggle() {
 	ds_ram_config_write();
 }
 
+void ds_chime_since_incr() {
+	uint8_t hh = cfg_table[CFG_CHIME_SINCE_BYTE ] >> CFG_CHIME_SINCE_SHIFT;
+	INCR(hh, 0, 23);
+	hh <<= CFG_CHIME_SINCE_SHIFT;
+	cfg_table[CFG_CHIME_SINCE_BYTE] &= ~CFG_CHIME_SINCE_MASK ;
+	cfg_table[CFG_CHIME_SINCE_BYTE] |= hh;
+	ds_ram_config_write();
+}
+
+void ds_chime_until_incr() {
+	uint8_t hh = cfg_table[CFG_CHIME_UNTIL_BYTE] & CFG_CHIME_UNTIL_MASK;
+	INCR(hh, 0, 23);
+	cfg_table[CFG_CHIME_UNTIL_BYTE] &= ~CFG_CHIME_UNTIL_MASK;
+	cfg_table[CFG_CHIME_UNTIL_BYTE] |= hh;
+	ds_ram_config_write();
+}
+
+void ds_chime_on_toggle() {
+	CONF_CHIME_ON = !CONF_CHIME_ON;
+	ds_ram_config_write();
+}
+
 void ds_date_mmdd_toggle() {
 	CONF_SW_MMDD = !CONF_SW_MMDD;
 	ds_ram_config_write();
 }
-
-#ifndef WITHOUT_DAYLIGHTSAVINGS
-__bit isDaylightSavings()
-{
-	int8_t previousSunday;
-	uint8_t month = ds_split2int(rtc_table[DS_ADDR_MONTH] & DS_MASK_MONTH);
-	int8_t day = ds_split2int(rtc_table[DS_ADDR_DAY] & DS_MASK_DAY);
-	uint8_t dow = rtc_table[DS_ADDR_WEEKDAY] - 1;
-	uint8_t hour = ds_split2int(rtc_table[DS_ADDR_HOUR] & DS_MASK_HOUR24);	//24h format
-
-	if (month > 3 && month < 11) return 1; //4,5,6,7,8,9,10
-
-	if (month < 3 || month == 12) return 0; //1, 2 or 12
-
-	if (month == 3)
-	{
-		//The 2nd Sunday in March is 8,9,10,11,12,13,14
-		if (day < 8 ) return 0;
-		if (day > 14) return 1;
-
-		//To get here day >= 8 && day <= 14
-		previousSunday = day - dow;
-
-		if (previousSunday < 8) previousSunday += 7;
-
-		if (day > previousSunday ) return 1;
-		if (day < previousSunday ) return 0;
-
-		// If the hour rolled back to 1, we're now in DST mode
-		if (hour == 1 && CONF_DST_ON == 1) return 1;
-
-		//To get here day = previousSunday
-		if (hour >= 2) return 1;
-		else return 0;
-	}
-
-	if (month == 11)
-	{
-		//The 1st Sunday in Nov is 1,2,3,4,5,6,7
-		if (day > 7) return 0;
-
-		//To get here day >= 1 && day <= 7
-		previousSunday = day - dow;
-
-		if (previousSunday < 1) previousSunday += 7;
-
-		if (day > previousSunday) return 0;
-		if (day < previousSunday) return 1;
-
-		// If the hour rolled back to 1, we're no longer in DST mode
-		if (hour == 1 && CONF_DST_ON == 0) return 0;
-
-		//To get here day = previousSunday
-		if (hour >= 2) return 0;
-		else return 1;
-	}
-
-	// We should never get here..
-	return 0;
-}
-
-void ds_date_dst_update() {
-	__bit DST = isDaylightSavings();
-
-	// Update the hour when a DST change occurs
-	if (DST != CONF_DST_ON) {
-		CONF_DST_ON = DST;
-		ds_ram_config_write();
-
-		// Spring forward if DST = 1, fall back if DST = 0
-		ds_hours_incr(DST);
-	}
-}
-#endif
 
 void ds_temperature_offset_incr() {
 	uint8_t offset = cfg_table[CFG_TEMP_BYTE] & CFG_TEMP_MASK;
